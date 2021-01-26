@@ -2,14 +2,18 @@ package Grid;
 
 import Algorithms.DFS;
 import Algorithms.DFSLabyrinth;
+import Algorithms.Greedy;
 
 import java.util.HashMap;
 import java.util.PriorityQueue;
 import java.util.concurrent.ThreadLocalRandom;
 
+
+// Handles individual cells and performs algorithms
 public class Field {
     int sizeX;
     int sizeY;
+
     HashMap<Integer, Vertice> map = new HashMap<>();
     PriorityQueue<Vertice> queue;
     int finalPathCurrentCode;
@@ -17,6 +21,7 @@ public class Field {
     Simulation simulation;
     DFS dfs = new DFS();
     DFSLabyrinth dfsLabyrinth = new DFSLabyrinth();
+    Greedy greedy = new Greedy();
 
     public Field(Simulation simulation, int sizeX, int sizeY) {
         this.sizeX = sizeX;
@@ -48,6 +53,7 @@ public class Field {
         emptyField();
         generateRandomObstructions(obstructionRatio);
         generatePath();
+        finalPathCurrentCode = sizeX*sizeY-1;
     }
 
 
@@ -61,6 +67,11 @@ public class Field {
     }
 
     public void changeCellState(int code, CellState cellState) {
+        if (simulation.getPlayerCode() == code && cellState != CellState.PLAYER) { // Don't change color if player at that position
+            map.get(code).cellState = cellState;
+            return;
+        }
+
         if (!map.containsKey(code))
             map.put(code, new Vertice(code));
         else
@@ -73,8 +84,8 @@ public class Field {
         changeCellState(cellCode(x,y), cellState);
     }
 
-    public Vertice getPosition(int x, int y) {
-        return map.get(cellCode(x,y));
+    public Vertice getCell(int x, int y) {
+        return map.getOrDefault(cellCode(x, y), null);
     }
 
     public int cellCode(int x, int y) {
@@ -100,15 +111,72 @@ public class Field {
 
     }
 
-    public void dijkstraAnimationSetup() {
+
+
+    public void greedySetup() {
+        finalPathCurrentCode = sizeX*sizeY-1;
+        greedy.setup(this, simulation.getPlayerCode());
+    }
+
+    public boolean greedyStep() {
+        return greedy.step(this);
+    }
+
+    public void DFSSetup() {
+        finalPathCurrentCode = sizeX*sizeY-1;
+        dfs.animationSetup(this, simulation.getPlayerCode());
+    }
+
+    public boolean DFSStep() {
+        return dfs.animationStep(this);
+    }
+
+    public void DFSLabyrinthSetup() {
+        dfsLabyrinth.setup(this);
+    }
+
+    public boolean DFSLabyrinthStep() {
+        return dfsLabyrinth.step(this);
+    }
+
+
+
+
+    public void dijkstraSearch(HashMap<Integer, Vertice> map, int startCode) {
+        Vertice start = map.get(startCode);
+        queue.clear();
+        queue.add(start);
+        start.distance = start.weight;
+
+        while (!queue.isEmpty()) {
+            Vertice v = queue.poll();
+            v.visited = true;
+
+            for (int code : v.getNeighboursCodes(sizeX, sizeY)) {
+                Vertice u = map.get(code);
+                if (!u.visited && u.distance > u.weight + v.distance) { // PROBABLY REDUNDANT CHECK
+                    u.distance = u.weight + v.distance;
+                    u.parent = v.code;
+                    queue.add(u);
+                }
+            }
+        }
+    }
+
+    public void dijkstraAnimationSetup(int startingCode) {
+        finalPathCurrentCode = sizeX*sizeY-1;
+
         for (Vertice v : map.values()) {
             v.distance = Double.POSITIVE_INFINITY;
             v.visited = false;
+            if (v.cellState != CellState.OBSTRUCTED) {
+                changeCellState(v.code, CellState.EMPTY);
+            }
         }
 
 
         queue.clear();
-        Vertice start = map.get(0);
+        Vertice start = map.get(startingCode);
         start.distance = 0;
         queue.add(start);
         changeCellState(start.code, CellState.VISITED);
@@ -135,43 +203,6 @@ public class Field {
                         simulation.passStoppedDijkstraSignal();
                         simulation.passShowFinalPathSignal();
                     }
-                }
-            }
-        }
-    }
-
-    public void DFSSetup() {
-        dfs.animationSetup(this);
-    }
-
-    public boolean DFSStep() {
-        return dfs.animationStep(this);
-    }
-
-    public void DFSLabyrinthSetup() {
-        dfsLabyrinth.setup(this);
-    }
-
-    public boolean DFSLabyrinthStep() {
-        return dfsLabyrinth.step(this);
-    }
-
-    public void dijkstraSearch(HashMap<Integer, Vertice> map, int startCode) {
-        Vertice start = map.get(startCode);
-        queue.clear();
-        queue.add(start);
-        start.distance = start.weight;
-
-        while (!queue.isEmpty()) {
-            Vertice v = queue.poll();
-            v.visited = true;
-
-            for (int code : v.getNeighboursCodes(sizeX, sizeY)) {
-                Vertice u = map.get(code);
-                if (!u.visited && u.distance > u.weight + v.distance) { // PROBABLY REDUNDANT CHECK
-                    u.distance = u.weight + v.distance;
-                    u.parent = v.code;
-                    queue.add(u);
                 }
             }
         }

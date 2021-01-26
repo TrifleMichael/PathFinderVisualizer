@@ -15,6 +15,8 @@ public class ColorPalette {
                 return Color.BLUE;
             case CHOSEN:
                 return Color.GOLD;
+            case PLAYER:
+                return Color.LIGHTCYAN;
             default:
                 return Color.WHITE;
         }
@@ -25,6 +27,7 @@ public class ColorPalette {
         return "Empty: BLACK"+"\n"+
                 "Visited: RED"+"\n"+
                 "Obstructed: BLUE"+"\n"+
-                "Path: GOLD";
+                "Path: GOLD"+"\n"+
+                "Player: LIGHTBLUE";
     }
 }

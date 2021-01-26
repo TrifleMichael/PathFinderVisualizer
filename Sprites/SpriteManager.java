@@ -7,6 +7,7 @@ import javafx.scene.paint.Color;
 
 import java.util.HashMap;
 
+// Sprite controller
 public class SpriteManager {
     double panelX;
     double panelY;
@@ -53,12 +54,7 @@ public class SpriteManager {
         return sprites.get(y*xFields+x);
     }
 
-    /*
-    public void updateCellColor(int x, int y, Position position) {
-        getSprite(x, y).updateColor(colorPalette(position));
-    }
 
-     */
 
     public void updateCellColor(int code, CellState cellState) {
         if (!sprites.containsKey(code)) {

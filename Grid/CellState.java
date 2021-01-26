@@ -1,5 +1,5 @@
 package Grid;
 
 public enum CellState {
-    EMPTY, OBSTRUCTED, VISITED, CHOSEN
+    EMPTY, OBSTRUCTED, VISITED, CHOSEN, PLAYER
 }

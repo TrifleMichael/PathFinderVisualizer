@@ -5,6 +5,7 @@ import javafx.animation.TranslateTransition;
 import javafx.application.Application;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -13,7 +14,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-
+// Launcher and main loop controller
 public class Main extends Application {
     Simulation simulation;
 
@@ -29,7 +30,8 @@ public class Main extends Application {
 
         HBox root = new HBox();
         primaryStage.setTitle("Search Algorithms Visualisation");
-        primaryStage.setScene(new Scene(root, winX, winY));
+        Scene scene = new Scene(root, winX, winY);
+        primaryStage.setScene(scene);
         primaryStage.show();
 
         VBox menuStage = new VBox();
@@ -45,13 +47,30 @@ public class Main extends Application {
 
 
 
-        EventHandler<MouseEvent> mousePressed = new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent e) {
-                simulation.showVerticeInfo(e.getX(), e.getY());
-            }
-        };
+        EventHandler<MouseEvent> mousePressed = e -> simulation.cellChangeOnClick(e.getX(), e.getY());
         simulationView.addEventFilter(MouseEvent.MOUSE_CLICKED, mousePressed);
+
+
+
+
+        scene.addEventHandler(KeyEvent.KEY_PRESSED, (key) -> {
+            switch (key.getCode()) {
+                case D:
+                    movePlayer(1, 0);
+                    break;
+                case W:
+                    movePlayer(0, -1);
+                    break;
+                case S:
+                    movePlayer(0, 1);
+                    break;
+                case A:
+                    movePlayer(-1, 0);
+                    break;
+            }
+        });
+
+
 
 
         Rectangle syncRect = new Rectangle(0,0,1,1);
@@ -59,7 +78,10 @@ public class Main extends Application {
         syncAnim.setNode(syncRect);
         syncAnim.setOnFinished(e -> playTick(syncAnim));
         syncAnim.play();
+    }
 
+    public void movePlayer(int dx, int dy) {
+        simulation.movePlayer(dx, dy);
     }
 
     public void passRefreshSignal() {
@@ -68,15 +90,11 @@ public class Main extends Application {
     }
 
     public void startDijkstra() {
-        if (state == AnimationState.ANIMATIONENDED)
-            simulation.refreshSignal(sideMenu.getXSize(), sideMenu.getYSize(), sideMenu.getObstructionValue()/100);
         state = AnimationState.DIJKSTRA;
         simulation.startDijkstra();
     }
 
     public void startDFS() {
-        if (state == AnimationState.ANIMATIONENDED)
-            simulation.refreshSignal(sideMenu.getXSize(), sideMenu.getYSize(), sideMenu.getObstructionValue()/100);
         state = AnimationState.DFS;
         simulation.startDFS();
     }
@@ -89,11 +107,21 @@ public class Main extends Application {
 
     }
 
+    public void startGreedy() {
+        state = AnimationState.GREEDY;
+        simulation.startGreedy();
+    }
+
     public void playTick(TranslateTransition syncAnimation) {
         syncAnimation.play();
         if (paused) return;
 
         switch(state) {
+            case GREEDY:
+                if(!simulation.playGreedy())
+                    state = AnimationState.FINALPATH;
+                break;
+
             case DFS:
                 if(!simulation.playDFSStep())
                     state = AnimationState.FINALPATH;
@@ -109,8 +137,8 @@ public class Main extends Application {
                 break;
 
             case DFSLABYRINTH:
-                if(!simulation.playDFSStep())
-                    state = AnimationState.ANIMATIONENDED;
+                if(!simulation.playDFSLabyrinth())
+                    state = AnimationState.WAITING;
                 break;
 
             default:

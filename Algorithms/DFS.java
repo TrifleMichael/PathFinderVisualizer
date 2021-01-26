@@ -6,23 +6,27 @@ import Grid.Field;
 
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.PriorityQueue;
 
 public class DFS {
     LinkedList<Vertice> queue = new LinkedList<>();
     Vertice current;
 
-    public void animationSetup(Field parentGrid) {
+    public void animationSetup(Field parentGrid, int startingCode) {
         HashMap<Integer, Vertice> map = parentGrid.getMap();
 
         for (Vertice v : map.values()) {
             v.visited = false;
+            v.parent = -1;
+            if (v.cellState != CellState.OBSTRUCTED) {
+                parentGrid.changeCellState(v.code, CellState.EMPTY);
+            }
         }
 
         queue.clear();
-        current = map.get(0);
+        current = map.get(startingCode);
     }
 
+    // False if more steps needed, True if objective achieved
     public boolean animationStep(Field parentGrid) {
         HashMap<Integer, Vertice> map = parentGrid.getMap();
         Vertice next = null;

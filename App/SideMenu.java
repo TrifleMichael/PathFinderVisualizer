@@ -87,11 +87,25 @@ public class SideMenu {
 
 
 
+        Button startGreedy = new Button("Greedy");
+        EventHandler<ActionEvent> playGreedy = new EventHandler<ActionEvent>() {
+            public void handle(ActionEvent e)
+            {
+                parent.startGreedy();
+            }
+        };
+        startGreedy.setLayoutX(panelX/2-30);
+        startGreedy.setOnAction(playGreedy);
+        startGreedy.setAlignment(Pos.CENTER);
+        stage.getChildren().add(startGreedy);
+
+
+
         Button DFSLabyrinth = new Button("DFS Labyrinth");
         EventHandler<ActionEvent> playDFSLabyrinth = new EventHandler<ActionEvent>() {
             public void handle(ActionEvent e)
             {
-                parent.startDFS();
+                parent.startDFSLabyrinth();
             }
         };
         DFSLabyrinth.setLayoutX(panelX/2-30);
